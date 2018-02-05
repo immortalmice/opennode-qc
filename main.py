@@ -1,29 +1,42 @@
 import json, requests, time, datetime
 
 height_range = 5
-
-def measureHealth(obj, his, max):
-	score = his * 0.2
-	if obj['status'] == 'online':
-		if obj['height'] < (max - height_range):
-			score += 200
-		else:
-			score += 400
-		score += (3000 - obj['elapsed']) / 30 * 4
-	return score
+threshold = 850
 
 xmr_headers = {
 	'content-type': 'application/json',
 }
 
+url_cf = 'https://api.cloudflare.com/client/v4/zones/e1787b6bb10e8d5fa8fb7705e181a0ce/dns_records/'
+name_cf = 'node.xmr-tw.org'
+headers_cf = {
+	'X-Auth-Email': 'chunhsi.tso@gmail.com',
+	'Content-Type': 'application/json',
+	'X-Auth-Key': '---'
+}
+
+#calculate health
+def measureHealth(obj, his, max):
+	score = his * 0.75
+	if obj['status'] == 'online':
+		if obj['height'] < (max - height_range):
+			score += 50
+		else:
+			score += 150
+		score += (3000 - obj['elapsed']) / 30
+	return score
+def cutPort(str):
+	i = str.find(':')
+	return str[:i]
+
 while True:
 	# Open IP File 
 	try:
 		ipf = open('IP.in', 'r')
+		xmr_nodes = json.loads(ipf.read())
+		ipf.close()
 	except (OSError, IOError) as e:
 		print('IP FILE open error\n' + e + '\n')
-	xmr_nodes = json.loads(ipf.read())
-	ipf.close()
 	
 	#Get Height From Node
 	node_ary = []
@@ -75,6 +88,56 @@ while True:
 	scf.write(json.dumps(node_ary))
 	scf.close()
 
+	#Get DNS List From Cloudflare
+	try:
+		res_cf = requests.get(url = url_cf, json = {'name': name_cf, 'per_page': 100}, headers = headers_cf)
+		json_cf = json.loads(res_cf.text)
+		if json_cf['success'] == True:
+			print('Success When Get DNS List')
+			#Create DNS Record
+			for node_obj in node_ary:
+				if node_obj['score'] >= threshold and node_obj['status'] == 'online':
+					flag_exist = False
+					for list_obj in json_cf['result']:
+						if list_obj['name'] == name_cf and list_obj['content'] == cutPort(node_obj['IP']):
+							flag_exist = True
+							break
+					if flag_exist:
+						print(node_obj['IP'] + ' already exist')
+					else:
+						try:
+							res_create = requests.post(url = url_cf, json = {'name': name_cf, 'type': 'A', 'content': cutPort(node_obj['IP'])}, headers = headers_cf)
+							json_create = json.loads(res_create.text)
+							if json_create['success'] == True:
+								print(node_obj['IP'] + ' create record success')
+							else:
+								print(node_obj['IP'] + ' create record fail')
+								print(res_create.text)
+						except requests.exceptions.RequestException as err:
+							print(str(err))
+			#Delete DNS Record
+			for list_obj in json_cf['result']:
+				if list_obj['name'] == name_cf:
+					flag_exist = False
+					for node_obj in node_ary:
+						if cutPort(node_obj['IP']) == list_obj['content'] and node_obj['score'] >= threshold and node_obj['status'] == 'online':
+							flag_exist = True
+							break
+					if not flag_exist:
+						try:
+							res_del = requests.delete(url = url_cf+list_obj['id'], headers = headers_cf)
+							json_del = json.loads(res_del.text)
+							if json_del['success'] == True:
+								print(list_obj['content'] + ' delete record success')
+							else:
+								print(list_obj['content'] + ' delete record fail')
+								print(res_del.text)
+						except requests.exceptions.RequestException as err:
+							print(str(err))
+		else:			
+			print('Error When Get DNS List')
+	except requests.exceptions.RequestException as err:
+		print(str(err))
 
 	print('Enter Sleep->')
 	time.sleep(300)
