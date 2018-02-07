@@ -1,4 +1,12 @@
-import json, requests, time, datetime
+import json, requests, time, datetime, configparser
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+zone_id = config['cloudflare-setting']['Zone-id']
+cf_auth_email = config['cloudflare-setting']['X-Auth-Email']
+cf_auth_key = config['cloudflare-setting']['X-Auth-Key']
+cf_record_name = config['cloudflare-setting']['Record-Name']
 
 height_range = 5
 threshold = 850
@@ -7,12 +15,12 @@ xmr_headers = {
 	'content-type': 'application/json',
 }
 
-url_cf = 'https://api.cloudflare.com/client/v4/zones/e1787b6bb10e8d5fa8fb7705e181a0ce/dns_records/'
-name_cf = 'node.xmr-tw.org'
+url_cf = 'https://api.cloudflare.com/client/v4/zones/'+zone_id+'/dns_records/'
+name_cf = cf_record_name
 headers_cf = {
-	'X-Auth-Email': 'chunhsi.tso@gmail.com',
 	'Content-Type': 'application/json',
-	'X-Auth-Key': '---'
+	'X-Auth-Email': cf_auth_email,
+	'X-Auth-Key': cf_auth_key
 }
 
 #calculate health
