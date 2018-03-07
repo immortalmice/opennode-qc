@@ -1,4 +1,4 @@
-import json, requests, time, datetime
+import json, requests, time, datetime, os
 
 height_range = 5
 threshold = 850
@@ -66,7 +66,7 @@ while True:
 
 	#Open Score File
 	try:
-		scf = open('score.json', 'r')
+		scf = open('last.json', 'r')
 		history = json.loads(scf.read())
 		scf.close()
 	except (OSError, IOError) as e:
@@ -84,7 +84,11 @@ while True:
 	#Sort
 	node_ary.sort(reverse = True, key = lambda obj:obj['score'])
 	#print(str(node_ary))
-	scf = open('score.json', 'w')
+	scf = open('last.json', 'w')
+	scf.write(json.dumps(node_ary))
+	scf.close()
+
+	scf = open('data/'+datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")+'.json', 'w')
 	scf.write(json.dumps(node_ary))
 	scf.close()
 
@@ -138,6 +142,58 @@ while True:
 			print('Error When Get DNS List')
 	except requests.exceptions.RequestException as err:
 		print(str(err))
+
+	#analysis
+	names = os.listdir('data/')
+	today = datetime.datetime.now().date()
+	analysis = []
+	for name in names:
+		day = datetime.datetime.strptime(name, "%Y-%m-%d %H-%M-%S.json").date()
+		diff = today - day
+		#print(diff.days)
+		if diff.days > 30:
+			os.remove('data/'+name)
+			continue
+		try:
+			ipf = open('data/'+name, 'r')
+			file_content = json.loads(ipf.read())
+			ipf.close()
+			#print(file_content)
+		except (OSError, IOError) as e:
+			print('FILE open error\n' + e + '\n')
+		for fip in file_content:
+			flag = False
+			for fa in analysis:
+				if fip['IP'] == fa['IP']:
+					flag = True
+					fa['count'] += 1
+					fa['totalscore'] += fip['score']
+					fa['totalelapsed'] += fip['elapsed']
+					if fip['status'] == 'online':
+						fa['totalonline'] += 1
+					break
+			if flag == False:
+				newip = {}
+				newip['count'] = 1
+				newip['IP'] = fip['IP']
+				newip['totalscore'] = fip['score']
+				newip['totalelapsed'] = fip['elapsed']
+				if fip['status'] == 'online':
+					newip['totalonline'] = 1
+				else:
+					newip['totalonline'] = 0
+				analysis.append(newip)
+	#averge
+	for node in analysis:
+		node['avg_score'] = node['totalscore'] / node['count']
+		node['avg_elapsed'] = node['totalelapsed'] / node['count']
+		node['online_rate'] = node['totalonline'] / node['count']
+
+	analysis.sort(reverse = True, key = lambda obj:obj['avg_score'])
+
+	scf = open('analysis.json', 'w')
+	scf.write(json.dumps(analysis))
+	scf.close()
 
 	print('Enter Sleep->')
 	time.sleep(300)
