@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>分析</title>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+	<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+	<script type="text/javascript">
+		function deIP(IP){
+			g = (IP.split(":")[0]).split('.')
+			return g[0]+'.'+g[1]+'.xxx.xxx'
+		}
+		$(document).ready(function(){
+			$.getJSON('analysis.json', function(data){
+				console.log(data)
+				var max_height = 0
+				for(var i = 0; i <= data.length-1; i ++){
+					if(data[i].height > max_height)
+						max_height = data[i].height
+				}
+				var str = '<table class="table table-hover"><thead><tr>'
+				str += '<th scope="col">維護者ID(IP)</th>'
+				str += '<th scope="col">平均分數</th>'
+				str += '<th scope="col">區塊高度('+max_height+')</th>'
+				str += '<th scope="col">平均反應延遲</th>'
+				str += '<th scope="col">上線時間百分比</th>'
+				str += '<th scope="col">是否開啟port18089</th></tr></thead><tbody>'
+				for(var i = 0; i <= data.length-1; i ++){
+					str += '<tr class="'
+					if(max_height - data[i].height <= 1 && data[i].avg_elapsed <= 800){
+						str += 'table-success">'
+					}else if(max_height - data[i].height >= 5 || data[i].avg_elapsed >= 2000){
+						str += 'table-danger">'
+					}else{
+						str += 'table-light">'
+					}
+					var color = undefined;
+					if(data[i].avg_score >= 920){
+						color = "gold"
+					}else if(data[i].avg_score >= 890){
+						color = "sliver"
+					}else if(data[i].avg_score >= 860){
+						color = "copper"
+					}
+					str += '<td>'+(color==undefined?'':'<img src="pic/'+color+'.png" height="36" width="36">')+data[i].host+'('+deIP(data[i].IP)+')</td>'
+					str += '<td>'+data[i].avg_score.toFixed(2)+'</td>'
+					str += '<td>'
+					if(data[i].height == max_height){
+						str += 'synchronized(0'
+					}else{
+						str += 'lagging('
+						str +=  data[i].height - max_height
+					}
+					str += ')</td>'
+					str += '<td>'+data[i].avg_elapsed.toFixed(2)+'</td>'
+					str += '<td>'+(data[i].online_rate*100).toFixed(2)+'%</td>'
+					str += '<td>'
+					if(data[i].IP.split(":")[1] == 18089)
+						str += 'yes'
+					else
+						str += 'no'
+					str += '</td>'
+					str += '</tr>'
+				}
+				str += '</tbody></table>'
+				$('body').html(str)
+
+			})
+		})
+	</script>
+</head>
+<body>
+
+</body>
+</html>

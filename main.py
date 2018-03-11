@@ -7,7 +7,7 @@ xmr_headers = {
 	'content-type': 'application/json',
 }
 
-url_cf = 'https://api.cloudflare.com/client/v4/zones/e1787b6bb10e8d5fa8fb7705e181a0ce/dns_records/'
+url_cf = 'https://api.cloudflare.com/client/v4/zones/'+zone_id+'/dns_records/'
 name_cf = 'node.xmr-tw.org'
 headers_cf = {
 	'X-Auth-Email': 'chunhsi.tso@gmail.com',
@@ -42,10 +42,10 @@ while True:
 	node_ary = []
 	max_height = -1
 	for node_ip in xmr_nodes:
-		node_infos = {'IP': node_ip}
+		node_infos = {'IP': node_ip['IP'], 'host': node_ip['host']}
 		try:
 			start = datetime.datetime.now()
-			resp = requests.post(url='http://'+node_ip+'/getheight', headers=xmr_headers, timeout = 2)
+			resp = requests.post(url='http://'+node_ip['IP']+'/getheight', headers=xmr_headers, timeout = 2)
 			node_infos['elapsed'] = (datetime.datetime.now() - start).microseconds/1000
 			node_json = json.loads(resp.text)
 			if node_json['status'] == 'OK':
@@ -66,7 +66,7 @@ while True:
 
 	#Open Score File
 	try:
-		scf = open('last.json', 'r')
+		scf = open('web/last.json', 'r')
 		history = json.loads(scf.read())
 		scf.close()
 	except (OSError, IOError) as e:
@@ -84,7 +84,7 @@ while True:
 	#Sort
 	node_ary.sort(reverse = True, key = lambda obj:obj['score'])
 	#print(str(node_ary))
-	scf = open('last.json', 'w')
+	scf = open('web/last.json', 'w')
 	scf.write(json.dumps(node_ary))
 	scf.close()
 
@@ -167,8 +167,11 @@ while True:
 				if fip['IP'] == fa['IP']:
 					flag = True
 					fa['count'] += 1
+					fa['host'] = fip['host']
 					fa['totalscore'] += fip['score']
 					fa['totalelapsed'] += fip['elapsed']
+					if fa['height'] < fip['height']:
+						fa['height'] = fip['height']
 					if fip['status'] == 'online':
 						fa['totalonline'] += 1
 					break
@@ -176,8 +179,10 @@ while True:
 				newip = {}
 				newip['count'] = 1
 				newip['IP'] = fip['IP']
+				newip['host'] = fip['host']
 				newip['totalscore'] = fip['score']
 				newip['totalelapsed'] = fip['elapsed']
+				newip['height'] = fip['height']
 				if fip['status'] == 'online':
 					newip['totalonline'] = 1
 				else:
@@ -191,7 +196,7 @@ while True:
 
 	analysis.sort(reverse = True, key = lambda obj:obj['avg_score'])
 
-	scf = open('analysis.json', 'w')
+	scf = open('web/analysis.json', 'w')
 	scf.write(json.dumps(analysis))
 	scf.close()
 
