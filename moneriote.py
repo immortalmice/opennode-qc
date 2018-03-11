@@ -10,8 +10,8 @@ import subprocess
 import random, pprint
 
 monerodLocation = 'monerod.exe'  # This is the relative or full path to the monerod binary
-moneroDaemonAddr = '10.1.1.61'  # The IP address that the rpc server is listening on
-moneroDaemonPort = '18081'  # The port address that the rpc server is listening on
+moneroDaemonAddr = '122.116.59.198'  # The IP address that the rpc server is listening on
+moneroDaemonPort = '18082'  # The port address that the rpc server is listening on
 moneroDaemonAuth = 'not:used'  # The username:password that the rpc server requires (if set) - has to be something
 
 maximumConcurrentScans = 16  # How many servers we should scan at once
