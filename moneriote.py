@@ -125,6 +125,7 @@ def check_all_nodes():
     #     start_scanning_threads(currentNodes, get_blockchain_height())
     print ('Checking for new nodes...')
     start_scanning_threads(load_nodes(), get_blockchain_height())
+    print ("We currently have {} 18089 nodes".format(currentNodes.__len__()))
     return currentNodes
 
 
