@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-import json, requests, time, datetime, os
-=======
 import json, requests, time, datetime, configparser
 
 config = configparser.ConfigParser()
@@ -10,7 +7,6 @@ zone_id = config['cloudflare-setting']['Zone-id']
 cf_auth_email = config['cloudflare-setting']['X-Auth-Email']
 cf_auth_key = config['cloudflare-setting']['X-Auth-Key']
 cf_record_name = config['cloudflare-setting']['Record-Name']
->>>>>>> 42d4d469050b6a8918bf733be73607dff7496af1
 
 height_range = 5
 threshold = 850
@@ -20,11 +16,7 @@ xmr_headers = {
 }
 
 url_cf = 'https://api.cloudflare.com/client/v4/zones/'+zone_id+'/dns_records/'
-<<<<<<< HEAD
-name_cf = 'node.xmr-tw.org'
-=======
 name_cf = cf_record_name
->>>>>>> 42d4d469050b6a8918bf733be73607dff7496af1
 headers_cf = {
 	'Content-Type': 'application/json',
 	'X-Auth-Email': cf_auth_email,
