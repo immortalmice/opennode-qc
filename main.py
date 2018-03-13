@@ -102,7 +102,7 @@ while True:
 
 	#Get DNS List From Cloudflare
 	try:
-		res_cf = requests.get(url = url_cf, json = {'name': name_cf, 'per_page': 100}, headers = headers_cf)
+		res_cf = requests.get(url = url_cf, params = {'name': name_cf, 'per_page': 100}, headers = headers_cf)
 		json_cf = json.loads(res_cf.text)
 		if json_cf['success'] == True:
 			print('Success When Get DNS List')
@@ -118,7 +118,7 @@ while True:
 						print(node_obj['IP'] + ' already exist')
 					else:
 						try:
-							res_create = requests.post(url = url_cf, json = {'name': name_cf, 'type': 'A', 'content': cutPort(node_obj['IP'])}, headers = headers_cf)
+							res_create = requests.post(url = url_cf, params = {'name': name_cf, 'type': 'A', 'content': cutPort(node_obj['IP'])}, headers = headers_cf)
 							json_create = json.loads(res_create.text)
 							if json_create['success'] == True:
 								print(node_obj['IP'] + ' create record success')
