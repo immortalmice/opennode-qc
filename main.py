@@ -149,7 +149,7 @@ def main():
 								else:
 									print(node_obj['IP'] + ' create record fail')
 									print(res_create.text)
-							except requests.exceptions.RequestException as err:
+							except (requests.exceptions.RequestException, ValueError) as err:
 								print(str(err))
 				#Delete DNS Record
 				for list_obj in json_cf['result']:
@@ -168,11 +168,11 @@ def main():
 								else:
 									print(list_obj['content'] + ' delete record fail')
 									print(res_del.text)
-							except requests.exceptions.RequestException as err:
+							except (requests.exceptions.RequestException, ValueError) as err:
 								print(str(err))
 			else:			
 				print('Error When Get DNS List')
-		except requests.exceptions.RequestException as err:
+		except (requests.exceptions.RequestException, ValueError) as err:
 			print(str(err))
 
 		#analysis
@@ -191,8 +191,8 @@ def main():
 				file_content = json.loads(ipf.read())
 				ipf.close()
 				#print(file_content)
-			except (OSError, IOError) as e:
-				print('FILE open error\n' + e + '\n')
+			except (OSError, IOError, ValueError) as e:
+				print('FILE open error, or json error\n' + e + '\n')
 			for fip in file_content:
 				flag = False
 				for fa in analysis:
